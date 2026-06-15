@@ -46,8 +46,7 @@ class OrdersNotifier extends _$OrdersNotifier {
     state = const AsyncLoading();
     try {
       final service = ref.read(savorServiceProvider);
-      final profile = ref.read(savorServiceProvider); // We'll get user id inside service or mock
-      
+
       final orderData = {
         'table_id': tableId,
         'customer_name': customerName,
@@ -80,10 +79,17 @@ class OrdersNotifier extends _$OrdersNotifier {
     await service.updateOrderStatus(orderId, status);
     ref.invalidate(ordersListProvider);
   }
+
+  Future<void> updateOrderItemStatus(String itemId, String status) async {
+    final service = ref.read(savorServiceProvider);
+    await service.updateOrderItemStatus(itemId, status);
+    ref.invalidate(ordersListProvider);
+  }
 }
 
 @riverpod
-Future<Map<String, dynamic>?> validateCoupon(ValidateCouponRef ref, String code) async {
+Future<Map<String, dynamic>?> validateCoupon(
+    ValidateCouponRef ref, String code) async {
   final service = ref.watch(savorServiceProvider);
   return service.validateCoupon(code);
 }

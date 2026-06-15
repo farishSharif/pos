@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'features/auth/providers/auth_provider.dart';
@@ -51,7 +50,7 @@ GoRouter router(RouterRef ref) {
       if (loc == '/billing' && role != 'cashier' && role != 'admin') {
         return role == 'kitchen' ? '/kitchen' : '/tables';
       }
-      final adminOnlyRoutes = ['/menu', '/inventory', '/staff', '/reports', '/settings'];
+      final adminOnlyRoutes = ['/menu', '/inventory', '/staff', '/reports'];
       if (adminOnlyRoutes.contains(loc) && role != 'admin') {
         return role == 'kitchen' ? '/kitchen' : '/tables';
       }

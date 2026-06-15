@@ -65,60 +65,84 @@ class MenuItemsTab extends ConsumerWidget {
             orElse: () => {'name': 'Unknown'},
           )['name'] as String;
 
-          return Dismissible(
-            key: Key(item.id),
-            background: Container(
-              color: kAccentDim.withOpacity(0.5),
-              alignment: Alignment.centerLeft,
-              padding: const EdgeInsets.only(left: 20),
-              child: const Icon(Icons.edit, color: kAccent),
-            ),
-            secondaryBackground: Container(
-              color: kError.withOpacity(0.2),
-              alignment: Alignment.centerRight,
-              padding: const EdgeInsets.only(right: 20),
-              child: const Icon(Icons.delete, color: kError),
-            ),
-            confirmDismiss: (direction) async {
-              if (direction == DismissDirection.startToEnd) {
-                showEditSheet(item);
-                return false; // Don't swipe away
-              } else {
-                confirmDelete(item);
-                return false; // Managed by dialog
-              }
-            },
-            child: Card(
-              color: kSurface,
-              margin: const EdgeInsets.only(bottom: 8),
-              child: ListTile(
-                leading: Container(
-                  width: 50,
-                  height: 50,
-                  decoration: BoxDecoration(
-                    color: kSurface2,
-                    borderRadius: BorderRadius.circular(8),
+          return Card(
+            color: kSurface,
+            margin: const EdgeInsets.only(bottom: 12),
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        width: 60,
+                        height: 60,
+                        decoration: BoxDecoration(
+                          color: kSurface2,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: item.imageUrl != null
+                            ? ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: Image.network(item.imageUrl!, fit: BoxFit.cover),
+                              )
+                            : const Icon(Icons.fastfood, color: kTextSecondary),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(item.name, style: kBody.copyWith(fontWeight: FontWeight.bold, fontSize: 16)),
+                            const SizedBox(height: 4),
+                            Text('$catName • ${item.prepTimeMinutes}m prep', style: kCaption),
+                            const SizedBox(height: 4),
+                            Text(CurrencyFormatter.format(item.price), style: kPrice.copyWith(fontSize: 15)),
+                          ],
+                        ),
+                      ),
+                      Column(
+                        children: [
+                          Text(
+                            item.isAvailable ? 'Available' : 'Unavailable',
+                            style: kCaption.copyWith(
+                              fontSize: 10,
+                              color: item.isAvailable ? kSuccess : kTextSecondary,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Switch(
+                            value: item.isAvailable,
+                            activeThumbColor: kAccent,
+                            onChanged: (val) {
+                              ref.read(menuNotifierProvider.notifier).toggleAvailability(item.id, val);
+                            },
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
-                  child: item.imageUrl != null
-                      ? Image.network(item.imageUrl!, fit: BoxFit.cover)
-                      : const Icon(Icons.fastfood, color: kTextSecondary),
-                ),
-                title: Text(item.name, style: kBody.copyWith(fontWeight: FontWeight.bold)),
-                subtitle: Text('$catName • ${item.prepTimeMinutes}m prep', style: kCaption),
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(CurrencyFormatter.format(item.price), style: kPrice.copyWith(fontSize: 14)),
-                    const SizedBox(width: 8),
-                    Switch(
-                      value: item.isAvailable,
-                      activeColor: kAccent,
-                      onChanged: (val) {
-                        ref.read(menuNotifierProvider.notifier).toggleAvailability(item.id, val);
-                      },
-                    ),
-                  ],
-                ),
+                  const Divider(color: kDivider, height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton.icon(
+                        style: TextButton.styleFrom(foregroundColor: kAccent),
+                        onPressed: () => showEditSheet(item),
+                        icon: const Icon(Icons.edit, size: 16),
+                        label: const Text('Edit', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                      ),
+                      const SizedBox(width: 16),
+                      TextButton.icon(
+                        style: TextButton.styleFrom(foregroundColor: kError),
+                        onPressed: () => confirmDelete(item),
+                        icon: const Icon(Icons.delete_outline, size: 16),
+                        label: const Text('Delete', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
           );
@@ -136,7 +160,7 @@ class MenuItemsTab extends ConsumerWidget {
             border: Border.all(color: kDivider),
           ),
           child: DataTable(
-            headingRowColor: MaterialStateProperty.all(kSurface2),
+            headingRowColor: WidgetStateProperty.all(kSurface2),
             columns: [
               DataColumn(label: Text('Preview', style: kTitle.copyWith(fontSize: 14))),
               DataColumn(label: Text('Item Name', style: kTitle.copyWith(fontSize: 14))),
@@ -174,7 +198,7 @@ class MenuItemsTab extends ConsumerWidget {
                   DataCell(
                     Switch(
                       value: item.isAvailable,
-                      activeColor: kAccent,
+                      activeThumbColor: kAccent,
                       onChanged: (val) {
                         ref.read(menuNotifierProvider.notifier).toggleAvailability(item.id, val);
                       },

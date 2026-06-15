@@ -13,6 +13,10 @@ class DateFormatter {
     return DateFormat('hh:mm a').format(dateTime);
   }
 
+  static String dateWithTime(DateTime dateTime) {
+    return formatFullDate(dateTime);
+  }
+
   static String formatTimeString(String? timeString) {
     if (timeString == null || timeString.isEmpty) return '--:--';
     try {

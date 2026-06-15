@@ -89,11 +89,13 @@ class AuthNotifier extends _$AuthNotifier {
     state = state.copyWith(isLoading: true);
     try {
       await ref.read(savorServiceProvider).signOut();
+    } catch (_) {
+      // Ignore backend signOut failure to ensure local signOut always completes
+    }
+    try {
       final sp = await SharedPreferences.getInstance();
       await sp.remove(_spKey);
-      state = AuthState(profile: null);
-    } catch (_) {
-      state = state.copyWith(isLoading: false);
-    }
+    } catch (_) {}
+    state = AuthState(profile: null);
   }
 }

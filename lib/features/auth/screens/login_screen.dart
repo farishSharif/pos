@@ -49,7 +49,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
 
     if (mounted) {
       if (success) {
-        CustomSnackBar.showSuccess(context, 'Welcome to SAVOR POS!');
+        CustomSnackBar.showSuccess(context, 'Welcome to ROYAL FF!');
       } else {
         final errorMsg = ref.read(authNotifierProvider).errorMessage ?? 'Login failed';
         CustomSnackBar.showError(context, errorMsg);
@@ -127,7 +127,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('SAVOR POS', style: kDisplayLarge.copyWith(fontSize: 48, color: kAccent)),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(20),
+                  child: Image.asset('assets/royal_logo.png', height: 100, width: 100, fit: BoxFit.cover),
+                ),
+                const SizedBox(height: 24),
+                Text('ROYAL FF', style: kDisplayLarge.copyWith(fontSize: 48, color: kAccent)),
                 const SizedBox(height: 16),
                 Text(
                   'Complete Restaurant Management SaaS. Manage orders, tables, billing, and KDS realtime.',
@@ -140,7 +145,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
                     child: Lottie.network(
                       'https://assets5.lottiefiles.com/packages/lf20_q5pk6hyq.json',
                       errorBuilder: (context, error, stackTrace) {
-                        return Icon(Icons.restaurant, size: 120, color: kAccent.withOpacity(0.4));
+                        return ClipRRect(
+                          borderRadius: BorderRadius.circular(32),
+                          child: Image.asset('assets/royal_logo.png', height: 200, width: 200, fit: BoxFit.cover),
+                        );
                       },
                     ),
                   ),
@@ -179,9 +187,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
   Widget _buildBrandHeader() {
     return Column(
       children: [
-        const Icon(Icons.restaurant_menu, size: 64, color: kAccent),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(16),
+          child: Image.asset('assets/royal_logo.png', height: 100, width: 100, fit: BoxFit.cover),
+        ),
         const SizedBox(height: 16),
-        Text('SAVOR POS', style: kDisplayLarge),
+        Text('ROYAL FF', style: kDisplayLarge),
         const SizedBox(height: 8),
         Text('Smart Dining, Seamless Service', style: kCaption),
       ],

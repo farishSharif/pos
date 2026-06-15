@@ -36,7 +36,7 @@ class _MenuGridState extends ConsumerState<MenuGrid> {
     final isTablet = Breakpoints.isLargeScreen(context);
 
     Widget buildCategoryTabs(List<Map<String, dynamic>> cats) {
-      final menuCats = cats.map((c) => MenuCategory.fromJson(c)).toList();
+      final menuCats = cats.map((c) => MenuCategory.fromJson(c)).where((c) => c.isActive).toList();
 
       return Container(
         height: 54,
@@ -87,9 +87,16 @@ class _MenuGridState extends ConsumerState<MenuGrid> {
 
     Widget buildGrid(List<Map<String, dynamic>> items) {
       final allItems = items.map((i) => MenuItem.fromJson(i)).toList();
+      final activeCatIds = categoriesAsync.value
+              ?.map((c) => MenuCategory.fromJson(c))
+              .where((c) => c.isActive)
+              .map((c) => c.id)
+              .toSet() ??
+          {};
 
       // Apply filters
       var filtered = allItems.where((item) {
+        if (!activeCatIds.contains(item.categoryId)) return false;
         if (_selectedCategoryId != 'all' && item.categoryId != _selectedCategoryId) return false;
         if (_searchQuery.isNotEmpty && !item.name.toLowerCase().contains(_searchQuery.toLowerCase())) return false;
         return true;
@@ -103,21 +110,26 @@ class _MenuGridState extends ConsumerState<MenuGrid> {
         );
       }
 
-      return GridView.builder(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        itemCount: filtered.length,
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: isTablet ? 3 : 2,
-          crossAxisSpacing: 12,
-          mainAxisSpacing: 12,
-          childAspectRatio: isTablet ? 1.05 : 0.9,
-        ),
-        itemBuilder: (context, index) {
-          final item = filtered[index];
-          return MenuItemCard(
-            item: item,
-            onAdd: () {
-              ref.read(cartNotifierProvider.notifier).addItem(item);
+      return LayoutBuilder(
+        builder: (context, constraints) {
+          final crossAxisCount = (constraints.maxWidth / 165).floor().clamp(2, 6);
+          return GridView.builder(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            itemCount: filtered.length,
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: crossAxisCount,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
+              mainAxisExtent: 195,
+            ),
+            itemBuilder: (context, index) {
+              final item = filtered[index];
+              return MenuItemCard(
+                item: item,
+                onAdd: () {
+                  ref.read(cartNotifierProvider.notifier).addItem(item);
+                },
+              );
             },
           );
         },

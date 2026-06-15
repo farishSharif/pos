@@ -43,3 +43,9 @@ final kOrderId = GoogleFonts.jetBrainsMono(
   fontWeight: FontWeight.w400,
   color: kTextSecondary,
 );
+
+final kButtonLabel = GoogleFonts.outfit(
+  fontSize: 14,
+  fontWeight: FontWeight.w700,
+  color: kTextPrimary,
+);

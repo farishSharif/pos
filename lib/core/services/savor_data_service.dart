@@ -11,34 +11,47 @@ abstract class SavorDataService {
   Future<void> signOut();
   Future<Map<String, dynamic>> getCurrentProfile(String userId);
   Future<List<Map<String, dynamic>>> getStaffProfiles();
-  Future<Map<String, dynamic>> createStaffProfile(Map<String, dynamic> profileData);
+  Future<Map<String, dynamic>> createStaffProfile(
+      Map<String, dynamic> profileData);
   Future<void> updateStaffProfile(String id, Map<String, dynamic> profileData);
 
   // Tables
   Stream<List<Map<String, dynamic>>> tablesStream();
-  Future<void> updateTableStatus(int tableId, String status, {String? currentOrderId});
+  Future<void> updateTableStatus(int tableId, String status,
+      {String? currentOrderId});
+  Future<void> updateTablePositions(List<Map<String, dynamic>> positions);
+  Future<void> setTableCount(int count);
+  Future<void> createOrUpdateTable(Map<String, dynamic> tableData);
+  Future<void> deleteTable(int tableId);
 
   // Categories & Menu
   Future<List<Map<String, dynamic>>> getCategories();
   Future<List<Map<String, dynamic>>> getMenuItems();
   Future<Map<String, dynamic>> createMenuItem(Map<String, dynamic> itemData);
-  Future<Map<String, dynamic>> updateMenuItem(String id, Map<String, dynamic> itemData);
+  Future<Map<String, dynamic>> updateMenuItem(
+      String id, Map<String, dynamic> itemData);
   Future<void> deleteMenuItem(String id);
   Future<void> updateCategoryOrder(List<String> categoryIds);
+  Future<void> updateCategoryActiveStatus(String id, bool isActive);
 
   // Orders
   Future<List<Map<String, dynamic>>> getOrders();
   Stream<List<Map<String, dynamic>>> kitchenOrdersStream();
-  Future<Map<String, dynamic>> createOrder(Map<String, dynamic> orderData, List<Map<String, dynamic>> items);
+  Future<Map<String, dynamic>> createOrder(
+      Map<String, dynamic> orderData, List<Map<String, dynamic>> items);
   Future<void> updateOrderStatus(String orderId, String status);
-  Future<void> updateOrderPayment(String orderId, Map<String, dynamic> paymentData);
+  Future<void> updateOrderItemStatus(String itemId, String status);
+  Future<void> updateOrderPayment(
+      String orderId, Map<String, dynamic> paymentData);
 
   // Inventory
   Future<List<Map<String, dynamic>>> getInventory();
   Future<List<Map<String, dynamic>>> getPurchaseRecords();
   Future<Map<String, dynamic>> addInventoryItem(Map<String, dynamic> itemData);
-  Future<Map<String, dynamic>> updateInventoryStock(String id, double current, double minimum);
-  Future<Map<String, dynamic>> createPurchaseRecord(Map<String, dynamic> recordData);
+  Future<Map<String, dynamic>> updateInventoryStock(
+      String id, double current, double minimum);
+  Future<Map<String, dynamic>> createPurchaseRecord(
+      Map<String, dynamic> recordData);
 
   // Coupons
   Future<Map<String, dynamic>?> validateCoupon(String code);
@@ -58,5 +71,6 @@ SavorDataService savorService(SavorServiceRef ref) {
       supabaseUrl != 'YOUR_SUPABASE_URL' &&
       supabaseAnon.isNotEmpty &&
       supabaseAnon != 'YOUR_SUPABASE_ANON_KEY';
-  return isConfigured ? SupabaseSavorService() : MockSavorService();
+  final useLiveData = appDataSource == 'live' && isConfigured;
+  return useLiveData ? SupabaseSavorService() : MockSavorService();
 }

@@ -8,6 +8,7 @@ import '../../../core/theme/text_styles.dart';
 import '../../../core/widgets/app_bar_widget.dart';
 import '../../../core/widgets/bottom_nav.dart';
 import '../../../core/widgets/sidebar_navigation.dart';
+import '../../../core/widgets/app_drawer.dart';
 import '../providers/cart_provider.dart';
 import '../widgets/cart_panel.dart';
 import '../widgets/menu_grid.dart';
@@ -71,6 +72,7 @@ class OrdersScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: isTablet ? null : const AppBarWidget(title: 'Place Order'),
+      drawer: isTablet ? null : const AppDrawer(),
       bottomNavigationBar: isTablet ? null : const BottomNav(),
       floatingActionButton: !isTablet && cartItemCount > 0 ? buildPhoneCartButton(context) : null,
       body: Row(

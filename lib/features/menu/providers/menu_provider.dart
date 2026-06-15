@@ -1,7 +1,5 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../core/services/savor_data_service.dart';
-import '../models/menu_category.dart';
-import '../models/menu_item.dart';
 import '../../orders/providers/orders_provider.dart';
 
 part 'menu_provider.g.dart';
@@ -39,5 +37,12 @@ class MenuNotifier extends _$MenuNotifier {
     final service = ref.read(savorServiceProvider);
     await service.updateCategoryOrder(categoryIds);
     ref.invalidate(categoriesProvider);
+  }
+
+  Future<void> updateCategoryActiveStatus(String id, bool isActive) async {
+    final service = ref.read(savorServiceProvider);
+    await service.updateCategoryActiveStatus(id, isActive);
+    ref.invalidate(categoriesProvider);
+    ref.invalidate(menuItemsProvider);
   }
 }

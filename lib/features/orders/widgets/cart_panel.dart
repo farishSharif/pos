@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/theme/text_styles.dart';
 import '../../../core/utils/currency_formatter.dart';
 import '../../../core/utils/tax_calculator.dart';
 import '../../../core/widgets/custom_snackbar.dart';
+import '../../auth/providers/auth_provider.dart';
 import '../../tables/providers/tables_provider.dart';
 import '../../settings/providers/settings_provider.dart';
 import '../providers/cart_provider.dart';
@@ -96,8 +98,8 @@ class _CartPanelState extends ConsumerState<CartPanel> {
 
     final subtotal = ref.read(cartNotifierProvider.notifier).subtotal;
     
-    // Fetch rates from appSettings (or defaults)
-    final settingsAsync = ref.read(appSettingsProvider);
+    // Fetch rates from settings (or defaults)
+    final settingsAsync = ref.read(settingsNotifierProvider);
     final settings = settingsAsync.value;
     final cgstRate = settings?.cgstRate ?? 2.5;
     final sgstRate = settings?.sgstRate ?? 2.5;
@@ -155,6 +157,15 @@ class _CartPanelState extends ConsumerState<CartPanel> {
       if (mounted) {
         CustomSnackBar.showSuccess(context, 'Order submitted successfully!');
         if (widget.onCompleted != null) widget.onCompleted!();
+
+        if (status == 'pending') {
+          final role = ref.read(authNotifierProvider).role;
+          if (role == 'kitchen' || role == 'admin') {
+            context.go('/kitchen');
+          } else {
+            context.go('/tables');
+          }
+        }
       }
     } catch (e) {
       if (mounted) CustomSnackBar.showError(context, 'Checkout failed: $e');
@@ -165,7 +176,7 @@ class _CartPanelState extends ConsumerState<CartPanel> {
   Widget build(BuildContext context) {
     final cart = ref.watch(cartNotifierProvider);
     final tablesAsync = ref.watch(tablesStreamProvider);
-    final settingsAsync = ref.watch(appSettingsProvider);
+    final settingsAsync = ref.watch(settingsNotifierProvider);
 
     final subtotal = ref.read(cartNotifierProvider.notifier).subtotal;
 
@@ -225,7 +236,7 @@ class _CartPanelState extends ConsumerState<CartPanel> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.shopping_basket_outlined, size: 48, color: kTextSecondary.withOpacity(0.5)),
+                        Icon(Icons.shopping_basket_outlined, size: 48, color: kTextSecondary.withValues(alpha: 0.5)),
                         const SizedBox(height: 12),
                         Text('Your Cart is Empty', style: kCaption),
                       ],

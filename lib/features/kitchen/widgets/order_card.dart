@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/theme/text_styles.dart';
 import '../../orders/models/order.dart';
+import '../../orders/providers/orders_provider.dart';
 
 class OrderCard extends StatefulWidget {
   final Order order;
@@ -19,7 +20,8 @@ class OrderCard extends StatefulWidget {
   State<OrderCard> createState() => _OrderCardState();
 }
 
-class _OrderCardState extends State<OrderCard> with SingleTickerProviderStateMixin {
+class _OrderCardState extends State<OrderCard>
+    with SingleTickerProviderStateMixin {
   late Timer _timer;
   late Duration _elapsed;
   late AnimationController _pulsingController;
@@ -30,7 +32,7 @@ class _OrderCardState extends State<OrderCard> with SingleTickerProviderStateMix
     super.initState();
     final created = DateTime.tryParse(widget.order.createdAt) ?? DateTime.now();
     _elapsed = DateTime.now().difference(created);
-    
+
     // Timer to update elapsed minutes
     _timer = Timer.periodic(const Duration(seconds: 30), (timer) {
       if (mounted) {
@@ -46,7 +48,8 @@ class _OrderCardState extends State<OrderCard> with SingleTickerProviderStateMix
       duration: const Duration(milliseconds: 1000),
     )..repeat(reverse: true);
 
-    _pulseAnimation = Tween<double>(begin: 0.2, end: 0.9).animate(_pulsingController);
+    _pulseAnimation =
+        Tween<double>(begin: 0.2, end: 0.9).animate(_pulsingController);
   }
 
   @override
@@ -54,6 +57,16 @@ class _OrderCardState extends State<OrderCard> with SingleTickerProviderStateMix
     _timer.cancel();
     _pulsingController.dispose();
     super.dispose();
+  }
+
+  Color _getItemStatusColor(String status) {
+    return switch (status.toLowerCase()) {
+      'pending' => kError,
+      'preparing' => kWarning,
+      'ready' => kInfo,
+      'served' => kSuccess,
+      _ => kTextSecondary,
+    };
   }
 
   @override
@@ -99,11 +112,13 @@ class _OrderCardState extends State<OrderCard> with SingleTickerProviderStateMix
                 children: [
                   Text(
                     '#${widget.order.id.substring(widget.order.id.length - 4).toUpperCase()}',
-                    style: kOrderId.copyWith(fontWeight: FontWeight.bold, fontSize: 14),
+                    style: kOrderId.copyWith(
+                        fontWeight: FontWeight.bold, fontSize: 14),
                   ),
                   Row(
                     children: [
-                      const Icon(Icons.timer_outlined, size: 14, color: kTextSecondary),
+                      const Icon(Icons.timer_outlined,
+                          size: 14, color: kTextSecondary),
                       const SizedBox(width: 4),
                       Text(
                         '${minutes}m',
@@ -133,7 +148,7 @@ class _OrderCardState extends State<OrderCard> with SingleTickerProviderStateMix
                 ],
               ),
               const Divider(color: kDivider, height: 16),
-              
+
               // Items List
               ...widget.order.orderItems.map((item) {
                 return Padding(
@@ -147,16 +162,62 @@ class _OrderCardState extends State<OrderCard> with SingleTickerProviderStateMix
                           Expanded(
                             child: Text(
                               '${item.quantity}x ${item.name}',
-                              style: kBody.copyWith(fontWeight: FontWeight.bold),
+                              style:
+                                  kBody.copyWith(fontWeight: FontWeight.bold),
                             ),
                           ),
-                          Text(
-                            item.status.toUpperCase(),
-                            style: kCaption.copyWith(
-                              color: item.status == 'ready' ? kInfo : kTextSecondary,
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                            ),
+                          Consumer(
+                            builder: (context, ref, child) {
+                              return PopupMenuButton<String>(
+                                initialValue: item.status,
+                                tooltip: 'Change Status',
+                                color: kSurface2,
+                                onSelected: (newStatus) {
+                                  ref.read(ordersNotifierProvider.notifier)
+                                      .updateOrderItemStatus(item.id, newStatus);
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: _getItemStatusColor(item.status).withValues(alpha: 0.15),
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        item.status.toUpperCase(),
+                                        style: kCaption.copyWith(
+                                          color: _getItemStatusColor(item.status),
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Icon(
+                                        Icons.arrow_drop_down,
+                                        size: 12,
+                                        color: _getItemStatusColor(item.status),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                itemBuilder: (context) => [
+                                  PopupMenuItem(
+                                    value: 'pending',
+                                    child: Text('PENDING', style: kCaption.copyWith(color: kError, fontWeight: FontWeight.bold)),
+                                  ),
+                                  PopupMenuItem(
+                                    value: 'preparing',
+                                    child: Text('PREPARING', style: kCaption.copyWith(color: kWarning, fontWeight: FontWeight.bold)),
+                                  ),
+                                  PopupMenuItem(
+                                    value: 'ready',
+                                    child: Text('READY', style: kCaption.copyWith(color: kInfo, fontWeight: FontWeight.bold)),
+                                  ),
+                                ],
+                              );
+                            },
                           ),
                         ],
                       ),
@@ -165,7 +226,8 @@ class _OrderCardState extends State<OrderCard> with SingleTickerProviderStateMix
                           padding: const EdgeInsets.only(left: 12.0, top: 2),
                           child: Text(
                             '* ${item.notes}',
-                            style: kCaption.copyWith(color: kAccent, fontStyle: FontStyle.italic),
+                            style: kCaption.copyWith(
+                                color: kAccent, fontStyle: FontStyle.italic),
                           ),
                         ),
                     ],
@@ -173,12 +235,14 @@ class _OrderCardState extends State<OrderCard> with SingleTickerProviderStateMix
                 );
               }),
 
-              if (widget.order.notes != null && widget.order.notes!.isNotEmpty) ...[
+              if (widget.order.notes != null &&
+                  widget.order.notes!.isNotEmpty) ...[
                 const Divider(color: kDivider, height: 16),
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Icon(Icons.warning_amber_rounded, size: 14, color: kWarning),
+                    const Icon(Icons.warning_amber_rounded,
+                        size: 14, color: kWarning),
                     const SizedBox(width: 4),
                     Expanded(
                       child: Text(
@@ -192,12 +256,9 @@ class _OrderCardState extends State<OrderCard> with SingleTickerProviderStateMix
             ],
           ),
         ),
-      ),
-    );
-  }
+      );
+    }
 
-  @override
-  Widget build(BuildContext context) {
     if (shouldPulse) {
       return AnimatedBuilder(
         animation: _pulseAnimation,

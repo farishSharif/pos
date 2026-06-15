@@ -96,7 +96,7 @@ class NotificationsSheet extends ConsumerWidget {
                           leading: Container(
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
-                              color: _typeColor(n.type).withOpacity(0.15),
+                              color: _typeColor(n.type).withValues(alpha: 0.15),
                               shape: BoxShape.circle,
                             ),
                             child: Icon(_typeIcon(n.type), color: _typeColor(n.type), size: 20),

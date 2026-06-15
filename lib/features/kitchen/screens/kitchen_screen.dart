@@ -6,6 +6,7 @@ import '../../../core/theme/colors.dart';
 import '../../../core/widgets/app_bar_widget.dart';
 import '../../../core/widgets/bottom_nav.dart';
 import '../../../core/widgets/sidebar_navigation.dart';
+import '../../../core/widgets/app_drawer.dart';
 import '../../../core/widgets/loading_shimmer.dart';
 import '../../../core/widgets/error_state_widget.dart';
 import '../../orders/models/order.dart';
@@ -104,6 +105,7 @@ class _KitchenScreenState extends ConsumerState<KitchenScreen> with SingleTicker
 
     return Scaffold(
       appBar: isTablet ? null : const AppBarWidget(title: 'Kitchen Display'),
+      drawer: isTablet ? null : const AppDrawer(),
       bottomNavigationBar: isTablet ? null : const BottomNav(),
       body: Row(
         children: [

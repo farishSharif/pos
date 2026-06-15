@@ -47,9 +47,9 @@ class CategoriesTab extends ConsumerWidget {
               subtitle: Text('Sort Order: ${cat.sortOrder}', style: kCaption),
               trailing: Switch(
                 value: cat.isActive,
-                activeColor: kAccent,
+                activeThumbColor: kAccent,
                 onChanged: (val) {
-                  // Availability or active toggle
+                  ref.read(menuNotifierProvider.notifier).updateCategoryActiveStatus(cat.id, val);
                 },
               ),
             ),

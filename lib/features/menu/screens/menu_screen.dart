@@ -6,6 +6,7 @@ import '../../../core/theme/text_styles.dart';
 import '../../../core/widgets/app_bar_widget.dart';
 import '../../../core/widgets/bottom_nav.dart';
 import '../../../core/widgets/sidebar_navigation.dart';
+import '../../../core/widgets/app_drawer.dart';
 import '../../../core/widgets/loading_shimmer.dart';
 import '../../orders/providers/orders_provider.dart';
 import '../widgets/menu_items_tab.dart';
@@ -24,6 +25,7 @@ class MenuScreen extends ConsumerWidget {
       length: 2,
       child: Scaffold(
         appBar: isTablet ? null : const AppBarWidget(title: 'Menu Management'),
+        drawer: isTablet ? null : const AppDrawer(),
         bottomNavigationBar: isTablet ? null : const BottomNav(),
         floatingActionButton: FloatingActionButton(
           backgroundColor: kAccent,

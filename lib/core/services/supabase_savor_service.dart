@@ -66,12 +66,94 @@ class SupabaseSavorService implements SavorDataService {
         .update({'status': status, 'current_order_id': currentOrderId}).eq('id', tableId);
   }
 
+  @override
+  Future<void> updateTablePositions(List<Map<String, dynamic>> positions) async {
+    for (final pos in positions) {
+      await _client
+          .from('restaurant_tables')
+          .update({
+            'position_x': pos['position_x'],
+            'position_y': pos['position_y'],
+          })
+          .eq('id', pos['id']);
+    }
+  }
+
+  @override
+  Future<void> setTableCount(int count) async {
+    final List<dynamic> current = await _client.from('restaurant_tables').select().order('table_number');
+    final currentList = List<Map<String, dynamic>>.from(current);
+    final currentCount = currentList.length;
+
+    if (count > currentCount) {
+      final List<Map<String, dynamic>> toInsert = [];
+      for (int i = currentCount + 1; i <= count; i++) {
+        toInsert.add({
+          'table_number': i,
+          'capacity': 4,
+          'status': 'available',
+        });
+      }
+      try {
+        final List<Map<String, dynamic>> withCoords = toInsert.map((t) {
+          final idx = toInsert.indexOf(t) + currentCount;
+          return {
+            ...t,
+            'position_x': (idx % 3) * 200.0 + 50.0,
+            'position_y': (idx ~/ 3) * 150.0 + 50.0,
+          };
+        }).toList();
+        await _client.from('restaurant_tables').insert(withCoords);
+      } catch (_) {
+        await _client.from('restaurant_tables').insert(toInsert);
+      }
+    } else if (count < currentCount) {
+      final toDeleteIds = currentList.sublist(count).map((t) => t['id'] as int).toList();
+      if (toDeleteIds.isNotEmpty) {
+        await _client.from('restaurant_tables').delete().inFilter('id', toDeleteIds);
+      }
+    }
+  }
+
+  @override
+  Future<void> createOrUpdateTable(Map<String, dynamic> tableData) async {
+    if (tableData['id'] != null) {
+      try {
+        await _client.from('restaurant_tables').update(tableData).eq('id', tableData['id']);
+      } catch (_) {
+        final cleanData = Map<String, dynamic>.from(tableData)
+          ..remove('position_x')
+          ..remove('position_y');
+        await _client.from('restaurant_tables').update(cleanData).eq('id', tableData['id']);
+      }
+    } else {
+      try {
+        await _client.from('restaurant_tables').insert(tableData);
+      } catch (_) {
+        final cleanData = Map<String, dynamic>.from(tableData)
+          ..remove('position_x')
+          ..remove('position_y');
+        await _client.from('restaurant_tables').insert(cleanData);
+      }
+    }
+  }
+
+  @override
+  Future<void> deleteTable(int tableId) async {
+    await _client.from('restaurant_tables').delete().eq('id', tableId);
+  }
+
   // --- Categories & Menu ---
 
   @override
   Future<List<Map<String, dynamic>>> getCategories() async {
-    final List<dynamic> data = await _client.from('menu_categories').select().eq('is_active', true).order('sort_order');
+    final List<dynamic> data = await _client.from('menu_categories').select().order('sort_order');
     return List<Map<String, dynamic>>.from(data);
+  }
+
+  @override
+  Future<void> updateCategoryActiveStatus(String id, bool isActive) async {
+    await _client.from('menu_categories').update({'is_active': isActive}).eq('id', id);
   }
 
   @override
@@ -120,10 +202,27 @@ class SupabaseSavorService implements SavorDataService {
     return _client
         .from('orders')
         .stream(primaryKey: ['id'])
-        .neq('status', 'billed')
-        .neq('status', 'cancelled')
         .order('created_at')
-        .map((rows) => List<Map<String, dynamic>>.from(rows));
+        .asyncMap((rows) async {
+          final activeOrders = List<Map<String, dynamic>>.from(rows)
+              .where((r) => r['status'] != 'billed' && r['status'] != 'cancelled')
+              .toList();
+          
+          if (activeOrders.isEmpty) return [];
+
+          final futures = activeOrders.map((o) async {
+            final items = await _client.from('order_items').select().eq('order_id', o['id']);
+            final table = o['table_id'] != null 
+                ? await _client.from('restaurant_tables').select().eq('id', o['table_id']).maybeSingle()
+                : null;
+            return {
+              ...o,
+              'order_items': items,
+              'restaurant_tables': table,
+            };
+          });
+          return Future.wait(futures);
+        });
   }
 
   @override
@@ -178,6 +277,58 @@ class SupabaseSavorService implements SavorDataService {
         'type': 'order_ready',
         'target_role': 'waiter',
       });
+    }
+  }
+
+  @override
+  Future<void> updateOrderItemStatus(String itemId, String status) async {
+    await _client.from('order_items').update({'status': status}).eq('id', itemId);
+
+    // Get order ID to touch the parent order
+    final itemData = await _client.from('order_items').select('order_id').eq('id', itemId).single();
+    final orderId = itemData['order_id'] as String;
+
+    final List<dynamic> siblingItems = await _client.from('order_items').select('status').eq('order_id', orderId);
+    final statuses = siblingItems.map((si) => si['status'] as String).toList();
+
+    String? newOrderStatus;
+    if (statuses.every((s) => s == 'ready' || s == 'served')) {
+      newOrderStatus = 'ready';
+    } else if (statuses.any((s) => s == 'preparing' || s == 'ready')) {
+      newOrderStatus = 'preparing';
+    }
+
+    final updateData = <String, dynamic>{
+      'updated_at': DateTime.now().toIso8601String(),
+    };
+    if (newOrderStatus != null) {
+      updateData['status'] = newOrderStatus;
+    }
+
+    await _client.from('orders').update(updateData).eq('id', orderId);
+
+    // Update table status if appropriate
+    if (newOrderStatus != null) {
+      final orderData = await _client.from('orders').select('table_id').eq('id', orderId).single();
+      final tableId = orderData['table_id'] as int?;
+      if (tableId != null) {
+        final tableStatus = switch (newOrderStatus) {
+          'preparing' => 'preparing',
+          'ready' => 'ready',
+          _ => 'ordered',
+        };
+        await updateTableStatus(tableId, tableStatus, currentOrderId: orderId);
+      }
+
+      // If it became ready, trigger a notification
+      if (newOrderStatus == 'ready') {
+        await _client.from('notifications').insert({
+          'title': 'Order Ready',
+          'body': 'Order #${orderId.substring(orderId.length - 4)} is ready for Table ${tableId ?? 'Takeaway'}.',
+          'type': 'order_ready',
+          'target_role': 'waiter',
+        });
+      }
     }
   }
 

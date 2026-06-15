@@ -39,11 +39,11 @@ class _MenuItemCardState extends State<MenuItemCard> with SingleTickerProviderSt
       scale: _scale,
       duration: const Duration(milliseconds: 100),
       child: Card(
-        color: widget.item.isAvailable ? kSurface : kSurface.withOpacity(0.5),
+        color: widget.item.isAvailable ? kSurface : kSurface.withValues(alpha: 0.5),
         elevation: 2,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(kRadiusCard),
-          border: Border.all(
+          side: BorderSide(
             color: widget.item.isAvailable ? kDivider : Colors.transparent,
             width: 1,
           ),
@@ -97,13 +97,13 @@ class _MenuItemCardState extends State<MenuItemCard> with SingleTickerProviderSt
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Column(
+                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
                             widget.item.name,
-                            style: kTitle.copyWith(fontSize: 14, fontWeight: FontWeight.bold),
-                            maxLines: 1,
+                            style: kTitle.copyWith(fontSize: 13, fontWeight: FontWeight.bold),
+                            maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                           ),
                           const SizedBox(height: 4),
@@ -111,23 +111,28 @@ class _MenuItemCardState extends State<MenuItemCard> with SingleTickerProviderSt
                             Text(
                               widget.item.description!,
                               style: kCaption,
-                              maxLines: 2,
+                              maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
                         ],
-                      ),
-                      Row(
+                       ),
+                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            CurrencyFormatter.format(widget.item.price),
-                            style: kPrice.copyWith(fontSize: 14),
+                          Expanded(
+                            child: Text(
+                              CurrencyFormatter.format(widget.item.price),
+                              style: kPrice.copyWith(fontSize: 13),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
+                          const SizedBox(width: 4),
                           if (widget.item.isAvailable)
                             Container(
                               padding: const EdgeInsets.all(4),
                               decoration: BoxDecoration(
-                                color: kSuccess.withOpacity(0.1),
+                                color: kSuccess.withValues(alpha: 0.1),
                                 shape: BoxShape.circle,
                               ),
                               child: const Icon(Icons.add, color: kSuccess, size: 16),
@@ -138,7 +143,7 @@ class _MenuItemCardState extends State<MenuItemCard> with SingleTickerProviderSt
                               style: kCaption.copyWith(color: kError, fontWeight: FontWeight.bold),
                             ),
                         ],
-                      ),
+                       ),
                     ],
                   ),
                 ),

@@ -26,11 +26,11 @@ class _AddItemSheetState extends ConsumerState<AddItemSheet> {
   late TextEditingController _nameController;
   late TextEditingController _descController;
   late TextEditingController _priceController;
+  late TextEditingController _imageUrlController;
   
   String? _selectedCategoryId;
   double _prepTime = 15;
   bool _isAvailable = true;
-  String? _imageUrl;
   bool _isSaving = false;
 
   @override
@@ -40,10 +40,10 @@ class _AddItemSheetState extends ConsumerState<AddItemSheet> {
     _nameController = TextEditingController(text: item?.name ?? '');
     _descController = TextEditingController(text: item?.description ?? '');
     _priceController = TextEditingController(text: item != null ? '${item.price}' : '');
+    _imageUrlController = TextEditingController(text: item?.imageUrl ?? '');
     _selectedCategoryId = item?.categoryId ?? (widget.categories.isNotEmpty ? widget.categories.first['id'] as String : null);
     _prepTime = item != null ? item.prepTimeMinutes.toDouble() : 15;
     _isAvailable = item?.isAvailable ?? true;
-    _imageUrl = item?.imageUrl;
   }
 
   @override
@@ -51,6 +51,7 @@ class _AddItemSheetState extends ConsumerState<AddItemSheet> {
     _nameController.dispose();
     _descController.dispose();
     _priceController.dispose();
+    _imageUrlController.dispose();
     super.dispose();
   }
 
@@ -70,7 +71,7 @@ class _AddItemSheetState extends ConsumerState<AddItemSheet> {
       'category_id': _selectedCategoryId,
       'prep_time_minutes': _prepTime.toInt(),
       'is_available': _isAvailable,
-      'image_url': _imageUrl,
+      'image_url': _imageUrlController.text.trim().isEmpty ? null : _imageUrlController.text.trim(),
     };
 
     try {
@@ -182,6 +183,43 @@ class _AddItemSheetState extends ConsumerState<AddItemSheet> {
               ),
               const SizedBox(height: 16),
 
+              // Image URL
+              TextFormField(
+                controller: _imageUrlController,
+                decoration: const InputDecoration(
+                  labelText: 'Image URL (Optional)',
+                  hintText: 'e.g. https://images.unsplash.com/photo-...',
+                ),
+                style: kBody,
+                onChanged: (val) {
+                  setState(() {});
+                },
+              ),
+              if (_imageUrlController.text.trim().isNotEmpty) ...[
+                const SizedBox(height: 8),
+                Center(
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.network(
+                      _imageUrlController.text.trim(),
+                      height: 100,
+                      width: 150,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          height: 100,
+                          width: 150,
+                          color: kSurface2,
+                          alignment: Alignment.center,
+                          child: const Text('Invalid Image URL', style: TextStyle(color: kError, fontSize: 12)),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              ],
+              const SizedBox(height: 16),
+
               // Preparation Time slider
               Row(
                 children: [
@@ -217,8 +255,8 @@ class _AddItemSheetState extends ConsumerState<AddItemSheet> {
                   });
                 },
                 title: Text('Available for Ordering', style: kBody),
-                subtitle: Text('Instantly toggles presence on the POS POS screens', style: kCaption),
-                activeColor: kAccent,
+                subtitle: Text('Instantly toggles presence on the POS screens', style: kCaption),
+                activeThumbColor: kAccent,
                 contentPadding: EdgeInsets.zero,
               ),
               const SizedBox(height: 24),

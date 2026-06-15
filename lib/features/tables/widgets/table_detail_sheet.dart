@@ -5,6 +5,7 @@ import '../../../core/theme/colors.dart';
 import '../../../core/theme/text_styles.dart';
 import '../../../core/widgets/badge_widget.dart';
 import '../../../core/widgets/confirmation_dialog.dart';
+import '../../../core/widgets/custom_snackbar.dart';
 import '../models/restaurant_table.dart';
 import '../providers/tables_provider.dart';
 
@@ -38,25 +39,52 @@ class TableDetailPanel extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Header
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               Text(
                 'Table ${table.tableNumber} Details',
-                style: kHeadline.copyWith(fontSize: 22),
+                style: kHeadline.copyWith(fontSize: 20),
               ),
-              if (onClose != null)
-                IconButton(
-                  icon: const Icon(Icons.close),
-                  onPressed: onClose,
-                ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    constraints: const BoxConstraints(),
+                    padding: const EdgeInsets.all(8),
+                    icon: const Icon(Icons.edit_outlined, color: kAccent, size: 18),
+                    tooltip: 'Edit Table',
+                    onPressed: () => _showEditTableDialog(context, ref, table),
+                  ),
+                  IconButton(
+                    constraints: const BoxConstraints(),
+                    padding: const EdgeInsets.all(8),
+                    icon: const Icon(Icons.delete_outline, color: kError, size: 18),
+                    tooltip: 'Delete Table',
+                    onPressed: () => _confirmDeleteTable(context, ref, table),
+                  ),
+                  if (onClose != null) ...[
+                    IconButton(
+                      constraints: const BoxConstraints(),
+                      padding: const EdgeInsets.all(8),
+                      icon: const Icon(Icons.close, size: 18),
+                      onPressed: onClose,
+                    ),
+                  ],
+                ],
+              ),
             ],
           ),
           const SizedBox(height: 8),
-          Row(
+          Wrap(
+            spacing: 16,
+            runSpacing: 8,
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               Text('Capacity: ${table.capacity} guests', style: kCaption),
-              const SizedBox(width: 16),
               BadgeWidget.tableStatus(table.status),
             ],
           ),
@@ -156,6 +184,84 @@ class TableDetailPanel extends ConsumerWidget {
           const SizedBox(height: 16),
         ],
       ),
+    );
+  }
+
+  void _showEditTableDialog(BuildContext outerContext, WidgetRef ref, RestaurantTable table) {
+    final numberController = TextEditingController(text: table.tableNumber.toString());
+    final capacityController = TextEditingController(text: table.capacity.toString());
+    showDialog(
+      context: outerContext,
+      builder: (dialogContext) {
+        return AlertDialog(
+          backgroundColor: kSurface,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(kRadiusCard)),
+          title: Text('Edit Table ${table.tableNumber}', style: const TextStyle(color: Colors.white)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextFormField(
+                controller: numberController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(labelText: 'Table Number'),
+                style: kBody,
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: capacityController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(labelText: 'Capacity (Guests)'),
+                style: kBody,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Cancel', style: TextStyle(color: kTextSecondary)),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: kAccent, foregroundColor: Colors.black),
+              onPressed: () async {
+                final numVal = int.tryParse(numberController.text.trim());
+                final capVal = int.tryParse(capacityController.text.trim());
+                if (numVal != null && capVal != null) {
+                  Navigator.pop(dialogContext);
+                  final updated = table.copyWith(
+                    tableNumber: numVal,
+                    capacity: capVal,
+                  );
+                  try {
+                    await ref.read(tablesNotifierProvider.notifier).createOrUpdateTable(updated);
+                    if (outerContext.mounted) CustomSnackBar.showSuccess(outerContext, 'Table details updated.');
+                  } catch (e) {
+                    if (outerContext.mounted) CustomSnackBar.showError(outerContext, 'Failed to update table: $e');
+                  }
+                }
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _confirmDeleteTable(BuildContext context, WidgetRef ref, RestaurantTable table) {
+    ConfirmationDialog.show(
+      context: context,
+      title: 'Delete Table',
+      content: 'Are you sure you want to delete Table ${table.tableNumber}?',
+      confirmLabel: 'Delete',
+      confirmColor: kError,
+      onConfirm: () async {
+        try {
+          await ref.read(tablesNotifierProvider.notifier).deleteTable(table.id);
+          if (context.mounted) CustomSnackBar.showSuccess(context, 'Table ${table.tableNumber} deleted.');
+        } catch (e) {
+          if (context.mounted) CustomSnackBar.showError(context, 'Failed to delete table: $e');
+        }
+      },
     );
   }
 }

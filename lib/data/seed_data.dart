@@ -41,26 +41,11 @@ class SeedData {
   ];
 
   static final List<Map<String, dynamic>> restaurantTables = [
-    {'id': 1, 'table_number': 1, 'capacity': 2, 'status': 'available', 'current_order_id': null},
-    {'id': 2, 'table_number': 2, 'capacity': 2, 'status': 'available', 'current_order_id': null},
+    {'id': 1, 'table_number': 1, 'capacity': 2, 'status': 'occupied', 'current_order_id': 'order-mock-3'},
+    {'id': 2, 'table_number': 2, 'capacity': 2, 'status': 'ready', 'current_order_id': 'order-mock-4'},
     {'id': 3, 'table_number': 3, 'capacity': 4, 'status': 'ordered', 'current_order_id': 'order-mock-1'},
     {'id': 4, 'table_number': 4, 'capacity': 4, 'status': 'preparing', 'current_order_id': 'order-mock-2'},
-    {'id': 5, 'table_number': 5, 'capacity': 4, 'status': 'available', 'current_order_id': null},
-    {'id': 6, 'table_number': 6, 'capacity': 6, 'status': 'occupied', 'current_order_id': 'order-mock-3'},
-    {'id': 7, 'table_number': 7, 'capacity': 6, 'status': 'ready', 'current_order_id': 'order-mock-4'},
-    {'id': 8, 'table_number': 8, 'capacity': 2, 'status': 'available', 'current_order_id': null},
-    {'id': 9, 'table_number': 9, 'capacity': 4, 'status': 'billed', 'current_order_id': 'order-mock-5'},
-    {'id': 10, 'table_number': 10, 'capacity': 4, 'status': 'available', 'current_order_id': null},
-    {'id': 11, 'table_number': 11, 'capacity': 8, 'status': 'ordered', 'current_order_id': 'order-mock-6'},
-    {'id': 12, 'table_number': 12, 'capacity': 4, 'status': 'available', 'current_order_id': null},
-    {'id': 13, 'table_number': 13, 'capacity': 2, 'status': 'preparing', 'current_order_id': 'order-mock-7'},
-    {'id': 14, 'table_number': 14, 'capacity': 4, 'status': 'available', 'current_order_id': null},
-    {'id': 15, 'table_number': 15, 'capacity': 6, 'status': 'available', 'current_order_id': null},
-    {'id': 16, 'table_number': 16, 'capacity': 4, 'status': 'occupied', 'current_order_id': 'order-mock-8'},
-    {'id': 17, 'table_number': 17, 'capacity': 2, 'status': 'available', 'current_order_id': null},
-    {'id': 18, 'table_number': 18, 'capacity': 4, 'status': 'available', 'current_order_id': null},
-    {'id': 19, 'table_number': 19, 'capacity': 8, 'status': 'available', 'current_order_id': null},
-    {'id': 20, 'table_number': 20, 'capacity': 4, 'status': 'available', 'current_order_id': null},
+    {'id': 5, 'table_number': 5, 'capacity': 4, 'status': 'billed', 'current_order_id': 'order-mock-5'},
   ];
 
   static final List<Map<String, dynamic>> inventory = [
@@ -159,7 +144,7 @@ class SeedData {
     },
     {
       'id': 'order-mock-3',
-      'table_id': 6,
+      'table_id': 1,
       'customer_name': 'Bruce Wayne',
       'order_type': 'dine_in',
       'status': 'preparing',
@@ -177,7 +162,7 @@ class SeedData {
     },
     {
       'id': 'order-mock-4',
-      'table_id': 7,
+      'table_id': 2,
       'customer_name': 'Peter Parker',
       'order_type': 'dine_in',
       'status': 'ready',
@@ -195,7 +180,7 @@ class SeedData {
     },
     {
       'id': 'order-mock-5',
-      'table_id': 9,
+      'table_id': 5,
       'customer_name': 'Clark Kent',
       'order_type': 'dine_in',
       'status': 'billed',

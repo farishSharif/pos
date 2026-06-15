@@ -67,10 +67,13 @@ class SidebarNavigation extends ConsumerWidget {
             alignment: Alignment.centerLeft,
             child: Row(
               children: [
-                const Icon(Icons.restaurant, color: kAccent, size: 28),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(6),
+                  child: Image.asset('assets/royal_logo.png', width: 28, height: 28, fit: BoxFit.cover),
+                ),
                 const SizedBox(width: 12),
                 Text(
-                  'SAVOR POS',
+                  'ROYAL FF',
                   style: kDisplayLarge.copyWith(fontSize: 22, color: kTextPrimary),
                 ),
               ],
@@ -135,7 +138,9 @@ class SidebarNavigation extends ConsumerWidget {
                   backgroundColor: kAccentDim,
                   radius: 18,
                   child: Text(
-                    authState.profile?.name.substring(0, 1).toUpperCase() ?? 'U',
+                    authState.profile?.name.isNotEmpty == true
+                        ? authState.profile!.name.substring(0, 1).toUpperCase()
+                        : 'U',
                     style: kTitle.copyWith(color: kAccent, fontSize: 14),
                   ),
                 ),
@@ -163,13 +168,14 @@ class SidebarNavigation extends ConsumerWidget {
                 IconButton(
                   icon: const Icon(Icons.logout, color: kError, size: 18),
                   onPressed: () {
+                    final authNotifier = ref.read(authNotifierProvider.notifier);
                     ConfirmationDialog.show(
                       context: context,
                       title: 'Sign Out',
-                      content: 'Are you sure you want to sign out from Savor POS?',
+                      content: 'Are you sure you want to sign out from ROYAL FF?',
                       confirmLabel: 'Sign Out',
                       confirmColor: kError,
-                      onConfirm: () => ref.read(authNotifierProvider.notifier).signOut(),
+                      onConfirm: () => authNotifier.signOut(),
                     );
                   },
                 ),
